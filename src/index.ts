@@ -13,14 +13,14 @@ import {
   write,
   WritingOptions,
 } from 'xlsx';
-import {isString} from './helpers';
-import {WorkBook} from './workbook';
+import { isString } from './helpers';
+import { WorkBook } from './workbook';
 
 export const parse = (mixed: unknown, options: Sheet2JSONOpts & ParsingOptions = {}) => {
-  const {dateNF, header = 1, range, blankrows, defval, raw = true, rawNumbers, ...otherOptions} = options;
+  const { dateNF, header = 1, range, blankrows, defval, raw = true, rawNumbers, ...otherOptions } = options;
   const workBook = isString(mixed)
-    ? readFile(mixed, {dateNF, raw, ...otherOptions})
-    : read(mixed, {dateNF, raw, ...otherOptions});
+    ? readFile(mixed, { dateNF, raw, ...otherOptions })
+    : read(mixed, { dateNF, raw, ...otherOptions });
   return Object.keys(workBook.Sheets).map((name) => {
     const sheet = workBook.Sheets[name];
     return {
@@ -34,6 +34,7 @@ export const parse = (mixed: unknown, options: Sheet2JSONOpts & ParsingOptions =
         raw,
         rawNumbers,
       }),
+      '!merges': sheet['!merges']
     };
   });
 };
@@ -42,7 +43,7 @@ export const parseMetadata = (mixed: unknown, options: ParsingOptions = {}) => {
   const workBook = isString(mixed) ? readFile(mixed, options) : read(mixed, options);
   return Object.keys(workBook.Sheets).map((name) => {
     const sheet = workBook.Sheets[name];
-    return {name, data: sheet['!ref'] ? utils.decode_range(sheet['!ref']) : null};
+    return { name, data: sheet['!ref'] ? utils.decode_range(sheet['!ref']) : null };
   });
 };
 
@@ -77,9 +78,9 @@ export type BuildOptions = WorkSheetOptions & {
 
 export const build = (
   worksheets: WorkSheet[],
-  {parseOptions = {}, writeOptions = {}, sheetOptions = {}, ...otherOptions}: BuildOptions = {}
+  { parseOptions = {}, writeOptions = {}, sheetOptions = {}, ...otherOptions }: BuildOptions = {}
 ): Buffer => {
-  const {bookType = 'xlsx', bookSST = false, type = 'buffer', ...otherWriteOptions} = writeOptions;
+  const { bookType = 'xlsx', bookSST = false, type = 'buffer', ...otherWriteOptions } = writeOptions;
   const legacyOptions = Object.keys(otherOptions).filter((key) => {
     if (['!cols', '!rows', '!merges', '!protect', '!autofilter'].includes(key)) {
       console.debug(`Deprecated options['${key}'], please use options.sheetOptions['${key}'] instead.`);
@@ -88,7 +89,7 @@ export const build = (
     console.debug(`Unknown options['${key}'], please use options.parseOptions / options.writeOptions`);
     return false;
   });
-  const workBook = worksheets.reduce<WorkBook>((soFar, {name, data, options = {}}, index) => {
+  const workBook = worksheets.reduce<WorkBook>((soFar, { name, data, options = {} }, index) => {
     const sheetName = name || `Sheet_${index}`;
     const sheetData = utils.aoa_to_sheet(data, parseOptions);
     soFar.SheetNames.push(sheetName);
@@ -96,7 +97,7 @@ export const build = (
     Object.assign(soFar.Sheets[sheetName], legacyOptions, sheetOptions, options);
     return soFar;
   }, new WorkBook());
-  return write(workBook, {bookType, bookSST, type, ...otherWriteOptions});
+  return write(workBook, { bookType, bookSST, type, ...otherWriteOptions });
 };
 
-export default {parse, parseMetadata, build};
+export default { parse, parseMetadata, build };
